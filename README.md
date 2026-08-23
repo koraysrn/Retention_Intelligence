@@ -3,11 +3,6 @@
 An enterprise-grade **Churn Prediction → Experimentation Platform → Agentic
 AI/RAG** end-to-end re-engagement platform.
 
-[![CI](https://shields.io)](https://github.com/koraysrn/Retention_Intelligence)
-[![Python 3.14](https://img.shields.io/badge/python-3.14-3776AB?logo=python&logoColor=white)](.python-version)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](.pre-commit-config.yaml)
-[![dbt](https://img.shields.io/badge/dbt-core-orange?logo=dbt&logoColor=white)](dbt/dbt_project.yml)
 
 > **Source data:** [`ecommerce_data.csv`](ecommerce_data.csv)
 
