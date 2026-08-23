@@ -102,8 +102,6 @@ Details: [`docs/architecture.md`](docs/architecture.md)
 ├── .gitignore                     # Ignored files (secrets, data, artifacts)
 ├── .pre-commit-config.yaml        # Pre-commit hooks
 ├── .python-version                # Target Python version (3.14)
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md
 ├── Makefile                       # Frequently used commands
 ├── README.md                      # This file
 ├── SECURITY.md

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import Any, cast
 
 from src.config import settings
 
@@ -174,7 +175,7 @@ class LLMClient:
                 client = OpenAI(api_key=settings.openai_api_key)
                 model = settings.openai_model
 
-            resp = client.chat.completions.create(  # type: ignore[call-overload]
+            resp = cast(Any, client.chat.completions).create(
                 model=model,
                 messages=messages,
                 tools=tools,
