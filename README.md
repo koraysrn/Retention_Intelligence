@@ -156,19 +156,6 @@ python -m scripts.audit_versions
 
 ---
 
-## 6. Roadmap
-
-| Phase | Scope | Status |
-|---|---|---|
-| Phase 0 | Data exploration and quality report | ✅ |
-| Phase 1 | dbt + Feature Store + feature engineering | ✅ |
-| Phase 2 | Churn model (LightGBM/XGBoost) + metrics | ✅ |
-| Phase 3 | A/B experiment design and analysis | ✅ |
-| Phase 4 | Agentic AI / RAG pipeline | ✅ |
-| Phase 5 | Serving, monitoring, drift, retraining | ✅ |
-| Phase 6 | Streaming + CDP + multi-channel scaling | ✅ |
-
----
 
 ## 7. Quick Commands
 
