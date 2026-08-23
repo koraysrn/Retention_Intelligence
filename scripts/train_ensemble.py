@@ -167,7 +167,9 @@ def _summarize(metrics_list: list[dict]) -> dict[str, dict[str, float]]:
     return summarize_cv(metrics_list)
 
 
-def _compute_shap(pipeline: Pipeline, x_sample: pd.DataFrame, model_type: str = "lightgbm") -> pd.DataFrame:
+def _compute_shap(
+    pipeline: Pipeline, x_sample: pd.DataFrame, model_type: str = "lightgbm"
+) -> pd.DataFrame:
     """Compute mean |SHAP| importances via the LightGBM booster."""
     import shap
 
@@ -250,9 +252,7 @@ def _compute_guardrails(
     }
 
     cv_aucs = [
-        cv_summary[m]["roc_auc"]["mean"]
-        for m in MODEL_TYPES
-        if "roc_auc" in cv_summary.get(m, {})
+        cv_summary[m]["roc_auc"]["mean"] for m in MODEL_TYPES if "roc_auc" in cv_summary.get(m, {})
     ]
     cv_auc_mean = float(np.mean(cv_aucs)) if cv_aucs else None
     test_auc = float(test_full.get("roc_auc", 0.0))
@@ -292,11 +292,15 @@ def _compute_guardrails(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="XGBoost + LightGBM + CatBoost ensemble training")
-    parser.add_argument("--data", type=Path, default=settings.data_processed / "training_set.parquet")
+    parser.add_argument(
+        "--data", type=Path, default=settings.data_processed / "training_set.parquet"
+    )
     parser.add_argument("--target", default="churn")
     parser.add_argument("--n-splits", type=int, default=5)
     parser.add_argument("--test-size", type=float, default=0.20)
-    parser.add_argument("--use-smote", action="store_true", help="Apply SMOTE when the minority class is low")
+    parser.add_argument(
+        "--use-smote", action="store_true", help="Apply SMOTE when the minority class is low"
+    )
     parser.add_argument("--out", type=Path, default=OUT_DIR)
     args = parser.parse_args()
 
@@ -310,8 +314,14 @@ def main() -> None:
             x = x.drop(columns=recency_leaky)
     num_cols = numeric_features(x)
     cat_cols = categorical_features(x)
-    logger.info("Feature count: %d (numeric %d, categorical %d)", x.shape[1], len(num_cols), len(cat_cols))
-    logger.info("Target distribution: %s | minority rate: %.4f", y.value_counts().to_dict(), min(y.mean(), 1 - y.mean()))
+    logger.info(
+        "Feature count: %d (numeric %d, categorical %d)", x.shape[1], len(num_cols), len(cat_cols)
+    )
+    logger.info(
+        "Target distribution: %s | minority rate: %.4f",
+        y.value_counts().to_dict(),
+        min(y.mean(), 1 - y.mean()),
+    )
 
     params_file = PROJECT_ROOT / "configs" / "model_params.yaml"
     params_map = load_yaml(params_file) if params_file.exists() else {}
@@ -322,16 +332,18 @@ def main() -> None:
     )
 
     # --- CV (OOF probabilities + per-model ROC-AUC weights) -----------------
-    cv_result = _cv_scores(x_train, y_train, params_map, num_cols, cat_cols, args.use_smote, args.n_splits)
+    cv_result = _cv_scores(
+        x_train, y_train, params_map, num_cols, cat_cols, args.use_smote, args.n_splits
+    )
     cv_summary = {m: _summarize(v) for m, v in cv_result["metrics"].items()}
 
     # Model weights: normalized by OOF ROC-AUC
-    aucs = {
-        m: cv_summary[m]["roc_auc"]["mean"] for m in MODEL_TYPES if "roc_auc" in cv_summary[m]
-    }
+    aucs = {m: cv_summary[m]["roc_auc"]["mean"] for m in MODEL_TYPES if "roc_auc" in cv_summary[m]}
     weights = np.asarray([max(aucs.get(m, 0.5) - 0.5, 0.0) + 1e-6 for m in MODEL_TYPES])
     weights = weights / weights.sum()
-    logger.info("Model weights (OOF ROC-AUC): %s", dict(zip(MODEL_TYPES, weights.tolist(), strict=False)))
+    logger.info(
+        "Model weights (OOF ROC-AUC): %s", dict(zip(MODEL_TYPES, weights.tolist(), strict=False))
+    )
 
     # --- OOF ensemble + Platt calibration ------------------------------------
     oof_ensemble = np.zeros(len(y_train))
@@ -344,7 +356,9 @@ def main() -> None:
     oof_cal = pd.Series(oof_calibrated, index=y_train.index)
     threshold_f1 = find_best_threshold_f1(y_train, oof_cal)
     threshold_youden = find_best_threshold_youden(y_train, oof_cal)
-    logger.info("OOF calibrated thresholds -> F1: %.4f | Youden: %.4f", threshold_f1, threshold_youden)
+    logger.info(
+        "OOF calibrated thresholds -> F1: %.4f | Youden: %.4f", threshold_f1, threshold_youden
+    )
 
     # --- Final ensemble (full training set) ----------------------------------
     base = _build_base_pipelines(params_map, num_cols, cat_cols, y_train, args.use_smote)
@@ -360,7 +374,11 @@ def main() -> None:
     test_metrics_youden = evaluate_binary(y_test, test_score, threshold_youden)
 
     logger.info("Holdout full metrics:\n%s", json.dumps(test_full, indent=2))
-    logger.info("Holdout metrics (F1 threshold=%.4f):\n%s", threshold_f1, json.dumps(test_metrics_f1, indent=2))
+    logger.info(
+        "Holdout metrics (F1 threshold=%.4f):\n%s",
+        threshold_f1,
+        json.dumps(test_metrics_f1, indent=2),
+    )
 
     # --- Per-model holdout metrics + logistic baseline ------------------------
     model_metrics: dict[str, dict] = {}
@@ -400,7 +418,9 @@ def main() -> None:
         "ensemble": True,
         "calibrated": True,
         "models": MODEL_TYPES,
-        "model_weights": {m: round(float(w), 4) for m, w in zip(MODEL_TYPES, weights, strict=False)},
+        "model_weights": {
+            m: round(float(w), 4) for m, w in zip(MODEL_TYPES, weights, strict=False)
+        },
         "target": args.target,
         "imbalanced": bool(_is_imbalanced(y)),
         "minority_rate": round(float(min(y.mean(), 1 - y.mean())), 4),

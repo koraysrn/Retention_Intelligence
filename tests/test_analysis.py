@@ -67,9 +67,7 @@ def test_obrien_fleming_invalid_fraction() -> None:
 def test_simulate_outcomes_produces_expected_columns() -> None:
     assignment = pd.Series(["control", "treatment"] * 500)
     data = simulate_outcomes(assignment, seed=7, baseline_churn=0.5, treatment_effect=0.2)
-    assert {"assignment", "churn", "revenue", "pre_revenue", "discount_cost"}.issubset(
-        data.columns
-    )
+    assert {"assignment", "churn", "revenue", "pre_revenue", "discount_cost"}.issubset(data.columns)
     assert set(data["churn"].unique()).issubset({0, 1})
     c = data.loc[data["assignment"] == "control", "churn"].mean()
     t = data.loc[data["assignment"] == "treatment", "churn"].mean()

@@ -64,9 +64,7 @@ def load_ecommerce_data(csv_path: Path | str) -> pd.DataFrame:
         df["marketing_opt_in"] = df["marketing_opt_in"].astype(bool)
     if "customer_id" in df.columns:
         df["customer_id"] = df["customer_id"].astype(str)
-    logger.info(
-        "Loaded e-commerce data: %d rows, %d columns", len(df), df.shape[1]
-    )
+    logger.info("Loaded e-commerce data: %d rows, %d columns", len(df), df.shape[1])
     return df
 
 
@@ -83,9 +81,7 @@ def ingest_ecommerce_to_duckdb(
     import duckdb
 
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    columns_literal = ", ".join(
-        f"'{name}': '{dtype}'" for name, dtype in ECOMMERCE_COLUMNS.items()
-    )
+    columns_literal = ", ".join(f"'{name}': '{dtype}'" for name, dtype in ECOMMERCE_COLUMNS.items())
     csv_literal = Path(csv_path).resolve().as_posix()
     sql = f"""
         CREATE OR REPLACE TABLE {table} AS
@@ -125,6 +121,7 @@ def ingest_ecommerce_to_duckdb(
     """
     con = duckdb.connect(str(db_path))
     con.execute(sql)
-    count = con.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+    row = con.execute(f"SELECT count(*) FROM {table}").fetchone()
+    count = int(row[0]) if row is not None else 0
     con.close()
     logger.info("Written to DuckDB: %s -> %s (%d rows)", table, db_path, count)

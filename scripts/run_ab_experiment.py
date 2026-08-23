@@ -42,15 +42,23 @@ def main() -> None:
         default=settings.data_processed / "training_set.parquet",
     )
     parser.add_argument("--config", type=Path, default=PROJECT_ROOT / "configs" / "config.yaml")
-    parser.add_argument("--out", type=Path, default=settings.artifacts_dir / "ab_experiment_report.json")
-    parser.add_argument("--effect", type=float, default=None, help="Relative treatment effect (default: MDE)")
+    parser.add_argument(
+        "--out", type=Path, default=settings.artifacts_dir / "ab_experiment_report.json"
+    )
+    parser.add_argument(
+        "--effect", type=float, default=None, help="Relative treatment effect (default: MDE)"
+    )
     parser.add_argument("--seed", type=int, default=7)
     args = parser.parse_args()
 
     if not args.features.exists():
-        raise FileNotFoundError(f"Feature set not found: {args.features}. Run build_features first.")
+        raise FileNotFoundError(
+            f"Feature set not found: {args.features}. Run build_features first."
+        )
     if not args.training.exists():
-        raise FileNotFoundError(f"Training set not found: {args.training}. Run build_features first.")
+        raise FileNotFoundError(
+            f"Training set not found: {args.training}. Run build_features first."
+        )
 
     cfg = load_yaml(args.config).get("experiment", {})
     treatment_ratio = float(cfg.get("treatment_ratio", 0.5))

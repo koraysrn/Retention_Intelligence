@@ -97,9 +97,13 @@ class LLMClient:
                 messages=[{"role": "user", "content": user_prompt}],
             )
             content = "".join(
-                block.text for block in resp.content if getattr(block, "type", "") == "text"
+                str(getattr(block, "text", "") or "")
+                for block in resp.content
+                if getattr(block, "type", "") == "text"
             )
-            return LLMResponse(content=content, provider="anthropic", model=settings.anthropic_model)
+            return LLMResponse(
+                content=content, provider="anthropic", model=settings.anthropic_model
+            )
         except Exception as exc:  # noqa: BLE001
             logger.warning("Anthropic call failed, fell back to mock: %s", exc)
             return self._mock_complete(user_prompt)
@@ -120,9 +124,7 @@ class LLMClient:
                 ],
             )
             content = resp.choices[0].message.content or ""
-            return LLMResponse(
-                content=content, provider="deepseek", model=settings.deepseek_model
-            )
+            return LLMResponse(content=content, provider="deepseek", model=settings.deepseek_model)
         except Exception as exc:  # noqa: BLE001
             logger.warning("DeepSeek call failed, fell back to mock: %s", exc)
             return self._mock_complete(user_prompt)
@@ -172,7 +174,7 @@ class LLMClient:
                 client = OpenAI(api_key=settings.openai_api_key)
                 model = settings.openai_model
 
-            resp = client.chat.completions.create(
+            resp = client.chat.completions.create(  # type: ignore[call-overload]
                 model=model,
                 messages=messages,
                 tools=tools,

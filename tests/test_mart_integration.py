@@ -76,7 +76,6 @@ def test_churn_label_matches_python_definition() -> None:
     if not WAREHOUSE.exists():
         pytest.skip("warehouse.duckdb not found; run ingest + dbt run first")
 
-
     from src.data.loader import load_ecommerce_data
     from src.features.ecommerce import build_churn_labels
 

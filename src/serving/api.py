@@ -27,7 +27,11 @@ logger = logging.getLogger(__name__)
 FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 app = FastAPI(title="Churn Risk API", version="0.1.0")
-app.mount("/static", StaticFiles(directory=FRONTEND_DIST), name="static")
+
+# The frontend build is optional at import time (e.g. CI test jobs do not
+# build the dashboard); mount it only when present.
+if FRONTEND_DIST.exists():
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIST), name="static")
 
 _MODEL = None
 _PROFILES = None
@@ -66,7 +70,7 @@ def _fmt_date(value) -> str | None:
     if value is None or pd.isna(value):
         return None
     ts = pd.to_datetime(value)
-    return ts.strftime("%Y-%m-%d")
+    return str(ts.strftime("%Y-%m-%d"))
 
 
 def _risk_explanation(row: dict) -> str:
@@ -150,7 +154,8 @@ def model_metrics() -> dict:
     path = settings.artifacts_dir / "model_ecommerce_ensemble" / "metrics.json"
     if not path.exists():
         return {"available": False}
-    return json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data if isinstance(data, dict) else {}
 
 
 def _distribution(df: pd.DataFrame, column: str, top: int = 6) -> list[dict]:
@@ -205,10 +210,26 @@ def business_metrics() -> dict:
                 "id": "sales",
                 "name": "Sales & Revenue",
                 "metrics": [
-                    {"label": "Total Orders", "value": int(df["total_orders"].sum()), "format": "number"},
-                    {"label": "Total Spend", "value": round(float(df["total_spend_usd"].sum()), 2), "format": "currency"},
-                    {"label": "Avg Basket Value", "value": round(float(df["avg_order_value"].mean()), 2), "format": "currency"},
-                    {"label": "Avg Discount Rate", "value": round(float(df["avg_discount_pct"].mean()), 1), "format": "percent"},
+                    {
+                        "label": "Total Orders",
+                        "value": int(df["total_orders"].sum()),
+                        "format": "number",
+                    },
+                    {
+                        "label": "Total Spend",
+                        "value": round(float(df["total_spend_usd"].sum()), 2),
+                        "format": "currency",
+                    },
+                    {
+                        "label": "Avg Basket Value",
+                        "value": round(float(df["avg_order_value"].mean()), 2),
+                        "format": "currency",
+                    },
+                    {
+                        "label": "Avg Discount Rate",
+                        "value": round(float(df["avg_discount_pct"].mean()), 1),
+                        "format": "percent",
+                    },
                 ],
                 "distributions": [],
             },
@@ -216,7 +237,11 @@ def business_metrics() -> dict:
                 "id": "profile",
                 "name": "Customer Profile",
                 "metrics": [
-                    {"label": "Repeat Purchase Rate", "value": _pct(df["is_repeat_customer"].mean()), "format": "percent"},
+                    {
+                        "label": "Repeat Purchase Rate",
+                        "value": _pct(df["is_repeat_customer"].mean()),
+                        "format": "percent",
+                    },
                 ],
                 "distributions": [
                     {"label": "Demographic Segments", "items": _distribution(df, "age_group")},
@@ -228,23 +253,44 @@ def business_metrics() -> dict:
                 "id": "engagement",
                 "name": "Digital Engagement",
                 "metrics": [
-                    {"label": "Avg Sessions / Customer", "value": round(float(df["total_sessions"].mean()), 1), "format": "number"},
-                    {"label": "Cart Abandonment Rate", "value": _pct(df["has_abandoned_cart"].mean()), "format": "percent"},
+                    {
+                        "label": "Avg Sessions / Customer",
+                        "value": round(float(df["total_sessions"].mean()), 1),
+                        "format": "number",
+                    },
+                    {
+                        "label": "Cart Abandonment Rate",
+                        "value": _pct(df["has_abandoned_cart"].mean()),
+                        "format": "percent",
+                    },
                 ],
                 "distributions": [
-                    {"label": "Traffic Device Preference", "items": _distribution(df, "preferred_device_sess")},
-                    {"label": "Traffic Source", "items": _distribution(df, "preferred_source_sess")},
+                    {
+                        "label": "Traffic Device Preference",
+                        "items": _distribution(df, "preferred_device_sess"),
+                    },
+                    {
+                        "label": "Traffic Source",
+                        "items": _distribution(df, "preferred_source_sess"),
+                    },
                 ],
             },
             {
                 "id": "experience",
                 "name": "Experience & Preferences",
                 "metrics": [
-                    {"label": "Avg Satisfaction Score", "value": round(float(df["avg_rating_given"].mean()), 2), "format": "number"},
+                    {
+                        "label": "Avg Satisfaction Score",
+                        "value": round(float(df["avg_rating_given"].mean()), 2),
+                        "format": "number",
+                    },
                 ],
                 "distributions": [
                     {"label": "Payment Habits", "items": _distribution(df, "preferred_payment")},
-                    {"label": "Order Device Preference", "items": _distribution(df, "preferred_device_ord")},
+                    {
+                        "label": "Order Device Preference",
+                        "items": _distribution(df, "preferred_device_ord"),
+                    },
                     {"label": "Order Channel", "items": _distribution(df, "preferred_source")},
                     {"label": "Top Categories", "items": _distribution(df, "top_category_bought")},
                 ],
@@ -258,7 +304,8 @@ def experiments() -> dict:
     path = settings.artifacts_dir / "ab_experiment_report.json"
     if not path.exists():
         return {"available": False}
-    return json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data if isinstance(data, dict) else {}
 
 
 @app.get("/api/population")
@@ -276,7 +323,13 @@ def population() -> dict:
         m["customer_id"] = m["customer_id"].astype(str)
         df = df.merge(m, on="customer_id", how="left")
     else:
-        for col in ("segment", "predicted_clv", "predicted_clv_tier", "cart_abandon_probability", "discount_sensitivity"):
+        for col in (
+            "segment",
+            "predicted_clv",
+            "predicted_clv_tier",
+            "cart_abandon_probability",
+            "discount_sensitivity",
+        ):
             df[col] = None
 
     def top(column: str) -> str:
@@ -346,11 +399,7 @@ def insights() -> dict:
     has_risk = bool(df["churn_probability"].notna().any())
 
     if has_risk:
-        by_age = (
-            df.groupby("age_group")["churn_probability"]
-            .mean()
-            .sort_values(ascending=False)
-        )
+        by_age = df.groupby("age_group")["churn_probability"].mean().sort_values(ascending=False)
         if len(by_age):
             items.append(
                 {
@@ -479,19 +528,37 @@ def _customer_profile(customer_id: str) -> dict:
         "first_session_date": _fmt_date(row.get("first_session_date")),
         "total_orders": int(row.get("total_orders", 0)),
         "total_spend_usd": round(float(row.get("total_spend_usd", 0.0)), 2),
-        "avg_order_value": round(float(row.get("avg_order_value", 0.0)), 2) if pd.notna(row.get("avg_order_value")) else None,
-        "avg_discount_pct": round(float(row.get("avg_discount_pct", 0.0)), 2) if pd.notna(row.get("avg_discount_pct")) else None,
+        "avg_order_value": round(float(row.get("avg_order_value", 0.0)), 2)
+        if pd.notna(row.get("avg_order_value"))
+        else None,
+        "avg_discount_pct": round(float(row.get("avg_discount_pct", 0.0)), 2)
+        if pd.notna(row.get("avg_discount_pct"))
+        else None,
         "total_sessions": int(row.get("total_sessions", 0)),
         "has_abandoned_cart": int(row.get("has_abandoned_cart", 0)),
         "marketing_opt_in": bool(row.get("marketing_opt_in", False)),
         "is_repeat_customer": int(row.get("is_repeat_customer", 0)),
-        "top_category_bought": str(row.get("top_category_bought", "")) if pd.notna(row.get("top_category_bought")) else None,
-        "preferred_device_ord": str(row.get("preferred_device_ord", "")) if pd.notna(row.get("preferred_device_ord")) else None,
-        "preferred_source": str(row.get("preferred_source", "")) if pd.notna(row.get("preferred_source")) else None,
-        "preferred_device_sess": str(row.get("preferred_device_sess", "")) if pd.notna(row.get("preferred_device_sess")) else None,
-        "preferred_source_sess": str(row.get("preferred_source_sess", "")) if pd.notna(row.get("preferred_source_sess")) else None,
-        "preferred_payment": str(row.get("preferred_payment", "")) if pd.notna(row.get("preferred_payment")) else None,
-        "avg_rating_given": round(float(row.get("avg_rating_given", 0.0)), 2) if pd.notna(row.get("avg_rating_given")) else None,
+        "top_category_bought": str(row.get("top_category_bought", ""))
+        if pd.notna(row.get("top_category_bought"))
+        else None,
+        "preferred_device_ord": str(row.get("preferred_device_ord", ""))
+        if pd.notna(row.get("preferred_device_ord"))
+        else None,
+        "preferred_source": str(row.get("preferred_source", ""))
+        if pd.notna(row.get("preferred_source"))
+        else None,
+        "preferred_device_sess": str(row.get("preferred_device_sess", ""))
+        if pd.notna(row.get("preferred_device_sess"))
+        else None,
+        "preferred_source_sess": str(row.get("preferred_source_sess", ""))
+        if pd.notna(row.get("preferred_source_sess"))
+        else None,
+        "preferred_payment": str(row.get("preferred_payment", ""))
+        if pd.notna(row.get("preferred_payment"))
+        else None,
+        "avg_rating_given": round(float(row.get("avg_rating_given", 0.0)), 2)
+        if pd.notna(row.get("avg_rating_given"))
+        else None,
         "last_order_date": _fmt_date(row.get("last_order_date")),
         "last_session_date": _fmt_date(row.get("last_session_date")),
         "segment": segment,
@@ -563,8 +630,7 @@ def _summarize_tool_results(results: list[dict]) -> str:
                 )
         elif "segments" in result:
             lines.append(
-                "Risk segments: "
-                + ", ".join(f"{k}: {v}" for k, v in result["segments"].items())
+                "Risk segments: " + ", ".join(f"{k}: {v}" for k, v in result["segments"].items())
             )
     return "\n".join(lines) or "Action completed."
 
@@ -594,7 +660,9 @@ def _run_agent_loop(message: str, context: str) -> str:
         if not resp.tool_calls:
             if resp.content:
                 return resp.content
-            return _summarize_tool_results(results) if results else mock_chat_reply(message, context)
+            return (
+                _summarize_tool_results(results) if results else mock_chat_reply(message, context)
+            )
 
         assistant_tool_calls = []
         new_results = []

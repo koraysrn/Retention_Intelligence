@@ -165,10 +165,10 @@ python -m scripts.audit_versions
 | Phase 0 | Data exploration and quality report | ✅ |
 | Phase 1 | dbt + Feature Store + feature engineering | ✅ |
 | Phase 2 | Churn model (LightGBM/XGBoost) + metrics | ✅ |
-| Phase 3 | A/B experiment design and analysis | ⬜ |
-| Phase 4 | Agentic AI / RAG pipeline | ⬜ |
-| Phase 5 | Serving, monitoring, drift, retraining | ⬜ |
-| Phase 6 | Streaming + CDP + multi-channel scaling | ⬜ |
+| Phase 3 | A/B experiment design and analysis | ✅ |
+| Phase 4 | Agentic AI / RAG pipeline | ✅ |
+| Phase 5 | Serving, monitoring, drift, retraining | ✅ |
+| Phase 6 | Streaming + CDP + multi-channel scaling | ✅ |
 
 ---
 
@@ -189,12 +189,6 @@ make run-api       # start the serving API
 
 ---
 
-## 8. Contributing
-
-Contributions are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the
-development workflow and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for
-community standards.
-
-## 9. Security
+## 8. Security
 
 To report a vulnerability privately, see [`SECURITY.md`](SECURITY.md).

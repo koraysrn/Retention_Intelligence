@@ -42,8 +42,8 @@ class RealtimeReengagementFlow:
         if self.scorer is not None:
             return float(self.scorer(features))
         # Rule-based fallback score
-        carts = features.get("cart_abandoned_count", 0)
-        value = features.get("last_cart_value", 0.0)
+        carts = float(features.get("cart_abandoned_count", 0) or 0)
+        value = float(features.get("last_cart_value", 0.0) or 0.0)
         return min(0.95, 0.3 + 0.2 * carts + 0.1 * (value > 100))
 
     def handle_event(self, event: Event) -> dict:

@@ -55,9 +55,7 @@ def test_mask_pii_phone() -> None:
 
 
 def test_build_email_prompt_contains_context() -> None:
-    system, user = build_email_prompt(
-        {"country": "UK"}, "Sports products campaign", "recency high"
-    )
+    system, user = build_email_prompt({"country": "UK"}, "Sports products campaign", "recency high")
     assert "Sports products campaign" in user
     assert "recency high" in user
     assert "privacy-compliant" in system

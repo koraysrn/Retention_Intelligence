@@ -71,11 +71,24 @@ def test_features_exclude_pii_label_and_leaky_columns() -> None:
     for col in ("name", "email", "is_repeat_customer", "total_orders"):
         assert col not in features.columns
     # Derived columns that leak the order count must also be excluded
-    for col in ("total_spend_usd", "avg_order_value", "avg_discount_pct",
-                "order_span_days", "clv_tier", "preferred_payment", "top_category_bought"):
+    for col in (
+        "total_spend_usd",
+        "avg_order_value",
+        "avg_discount_pct",
+        "order_span_days",
+        "clv_tier",
+        "preferred_payment",
+        "top_category_bought",
+    ):
         assert col not in features.columns
     # Raw date columns never enter the model
-    for col in ("signup_date", "first_order_date", "last_order_date", "first_session_date", "last_session_date"):
+    for col in (
+        "signup_date",
+        "first_order_date",
+        "last_order_date",
+        "first_session_date",
+        "last_session_date",
+    ):
         assert col not in features.columns
 
 

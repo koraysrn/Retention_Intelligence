@@ -79,7 +79,9 @@ def main() -> None:
     x, y = split_features_target(df)
     num_cols = numeric_features(x)
     cat_cols = categorical_features(x)
-    logger.info("Feature count: %d (numeric %d, categorical %d)", x.shape[1], len(num_cols), len(cat_cols))
+    logger.info(
+        "Feature count: %d (numeric %d, categorical %d)", x.shape[1], len(num_cols), len(cat_cols)
+    )
 
     best_results: dict = {}
     for model_type, base, grid in [

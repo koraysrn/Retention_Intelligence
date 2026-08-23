@@ -43,9 +43,7 @@ def run_quality_checks(df: pd.DataFrame) -> QualityReport:
         report.duplicated_customer_ids = int(df["customer_id"].duplicated().sum())
 
     report.missing_values = {
-        col: int(df[col].isna().sum())
-        for col in df.columns
-        if df[col].isna().any()
+        col: int(df[col].isna().sum()) for col in df.columns if df[col].isna().any()
     }
 
     if "total_orders" in df:

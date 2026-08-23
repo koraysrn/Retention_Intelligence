@@ -26,7 +26,9 @@ class SoftVotingEnsemble:
         if weights is not None and len(weights) != len(models):
             raise ValueError("Weight count must match model count")
         self.models = models
-        self.weights = np.asarray(weights, dtype=float) if weights is not None else None
+        self.weights: np.ndarray | None = (
+            np.asarray(weights, dtype=float) if weights is not None else None
+        )
         self.classes_ = np.asarray([0, 1])
 
     def _normalized_weights(self) -> np.ndarray:
@@ -35,7 +37,8 @@ class SoftVotingEnsemble:
         total = self.weights.sum()
         if total <= 0:
             raise ValueError("Weight sum must be greater than zero")
-        return self.weights / total
+        result: np.ndarray = self.weights / total
+        return result
 
     def fit(self, x, y):
         for model in self.models:

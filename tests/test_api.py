@@ -1,13 +1,21 @@
 """Online API tests."""
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
+from src.config import settings
 from src.features.ecommerce import FEATURE_COLUMNS
 from src.serving.api import app
 
 MODEL_COLUMNS = FEATURE_COLUMNS
+
+HAS_RAW_DATA = settings.ecommerce_data.exists()
+HAS_SCORES = (settings.data_processed / "scores.parquet").exists()
+HAS_METRICS = (settings.artifacts_dir / "model_ecommerce_ensemble" / "metrics.json").exists()
+HAS_FRONTEND = (Path(__file__).resolve().parents[1] / "frontend" / "dist" / "index.html").exists()
 
 
 def test_health() -> None:
@@ -46,6 +54,7 @@ def test_predict_returns_risk() -> None:
     assert body["risk_tier"] in {"low", "medium", "high"}
 
 
+@pytest.mark.skipif(not HAS_FRONTEND, reason="frontend build not present")
 def test_root_serves_html() -> None:
     client = TestClient(app)
     resp = client.get("/")
@@ -53,6 +62,7 @@ def test_root_serves_html() -> None:
     assert "text/html" in resp.headers["content-type"]
 
 
+@pytest.mark.skipif(not HAS_SCORES, reason="scores.parquet not found")
 def test_summary_endpoint() -> None:
     client = TestClient(app)
     resp = client.get("/api/summary")
@@ -63,6 +73,7 @@ def test_summary_endpoint() -> None:
     assert set(body["risk_distribution"]).issubset({"low", "medium", "high"})
 
 
+@pytest.mark.skipif(not HAS_METRICS, reason="model metrics not found")
 def test_model_metrics_endpoint() -> None:
     client = TestClient(app)
     resp = client.get("/api/model-metrics")
@@ -72,6 +83,7 @@ def test_model_metrics_endpoint() -> None:
     assert "test_full" in body
 
 
+@pytest.mark.skipif(not HAS_RAW_DATA, reason="ecommerce_data.csv not found")
 def test_predict_customer_endpoint() -> None:
     client = TestClient(app)
     resp = client.get("/api/predict/1")
@@ -82,6 +94,7 @@ def test_predict_customer_endpoint() -> None:
     assert body["risk_tier"] in {"low", "medium", "high"}
 
 
+@pytest.mark.skipif(not HAS_RAW_DATA, reason="ecommerce_data.csv not found")
 def test_customer_detail_endpoint() -> None:
     client = TestClient(app)
     resp = client.get("/api/customers/1")
@@ -95,12 +108,14 @@ def test_customer_detail_endpoint() -> None:
     assert 0.0 <= body["churn_probability"] <= 1.0
 
 
+@pytest.mark.skipif(not HAS_RAW_DATA, reason="ecommerce_data.csv not found")
 def test_customer_detail_unknown_404() -> None:
     client = TestClient(app)
     resp = client.get("/api/customers/NONEXISTENT-ID")
     assert resp.status_code == 404
 
 
+@pytest.mark.skipif(not HAS_RAW_DATA, reason="ecommerce_data.csv not found")
 def test_predict_customer_unknown_404() -> None:
     client = TestClient(app)
     resp = client.get("/api/predict/NONEXISTENT-ID")
@@ -116,6 +131,7 @@ def test_chat_endpoint() -> None:
     assert "risk" in body["reply"].lower() or "Risk" in body["reply"]
 
 
+@pytest.mark.skipif(not HAS_RAW_DATA, reason="ecommerce_data.csv not found")
 def test_chat_endpoint_with_customer() -> None:
     client = TestClient(app)
     resp = client.post(
@@ -127,6 +143,7 @@ def test_chat_endpoint_with_customer() -> None:
     assert body["reply"]
 
 
+@pytest.mark.skipif(not HAS_SCORES, reason="scores.parquet not found")
 def test_chat_coupon_action() -> None:
     client = TestClient(app)
     resp = client.post(

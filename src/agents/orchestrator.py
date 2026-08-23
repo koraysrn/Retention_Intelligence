@@ -13,7 +13,7 @@ import argparse
 import json
 import logging
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 import pandas as pd
 
@@ -42,13 +42,14 @@ class AgentState(TypedDict, total=False):
     guardrail_reasons: list[str]
     escalated: bool
     escalation_summary: str
-    final_email: str
+    final_email: str | None
     decision: str
 
 
 def load_agents_config() -> dict:
     cfg = load_yaml(PROJECT_ROOT / "configs" / "config.yaml")
-    return cfg.get("agents", {})
+    agents = cfg.get("agents", {})
+    return agents if isinstance(agents, dict) else {}
 
 
 def _native(value: Any) -> Any:
@@ -71,13 +72,13 @@ def load_customer_profile(customer_id: str) -> dict:
         df = pd.read_parquet(path)
         mask = df["customer_id"].astype(str) == str(customer_id)
         if mask.any():
-            return _native(df.loc[mask].iloc[0].to_dict())
+            return dict(_native(df.loc[mask].iloc[0].to_dict()))
     except Exception as exc:  # noqa: BLE001
         logger.warning("Profile could not be loaded, using an empty profile: %s", exc)
     return {}
 
 
-def _profile_node(state: AgentState) -> dict:
+def _profile_node(state: AgentState) -> AgentState:
     profile = state.get("profile") or load_customer_profile(state["customer_id"])
     risk_reason = state.get("risk_reason") or (
         "High churn risk: elevated recency, low purchase activity"
@@ -85,7 +86,7 @@ def _profile_node(state: AgentState) -> dict:
     return {"profile": profile, "risk_reason": risk_reason}
 
 
-def _rag_node(state: AgentState) -> dict:
+def _rag_node(state: AgentState) -> AgentState:
     cfg = load_agents_config()
     top_k = int(cfg.get("top_k_retrieval", 5))
     profile = state.get("profile", {})
@@ -98,7 +99,7 @@ def _rag_node(state: AgentState) -> dict:
     return {"retrieval": result, "context": "\n".join(result.chunks)}
 
 
-def _generation_node(state: AgentState) -> dict:
+def _generation_node(state: AgentState) -> AgentState:
     system, user = build_email_prompt(
         state.get("profile", {}),
         state.get("context", ""),
@@ -108,7 +109,7 @@ def _generation_node(state: AgentState) -> dict:
     return {"draft_content": resp.content}
 
 
-def _guardrail_node(state: AgentState) -> dict:
+def _guardrail_node(state: AgentState) -> AgentState:
     cfg = load_agents_config()
     max_discount = float(cfg.get("max_discount_pct", 30.0))
     result = run_guardrails(state.get("draft_content", ""), max_discount)
@@ -127,14 +128,12 @@ def _should_send(state: AgentState) -> str:
 
     if not state.get("guardrail_passed", False):
         return "escalate"
-    if should_escalate(
-        state["customer_id"], ltv, confidence, True, complaints, high_ltv, conf_thr
-    ):
+    if should_escalate(state["customer_id"], ltv, confidence, True, complaints, high_ltv, conf_thr):
         return "escalate"
     return "send"
 
 
-def _send_node(state: AgentState) -> dict:
+def _send_node(state: AgentState) -> AgentState:
     return {
         "escalated": False,
         "decision": "SENT",
@@ -142,7 +141,7 @@ def _send_node(state: AgentState) -> dict:
     }
 
 
-def _escalate_node(state: AgentState) -> dict:
+def _escalate_node(state: AgentState) -> AgentState:
     cfg = load_agents_config()
     high_ltv = float(cfg.get("high_ltv_threshold", 1000.0))
 
@@ -152,15 +151,15 @@ def _escalate_node(state: AgentState) -> dict:
     complaints = int(profile.get("support_complaints", 0) or 0)
 
     reasons = state.get("guardrail_reasons", [])
-    reason = "; ".join(reasons) if reasons else "High LTV + low confidence (human approval required)"
+    reason = (
+        "; ".join(reasons) if reasons else "High LTV + low confidence (human approval required)"
+    )
     priority = determine_priority(ltv, confidence, complaints, high_ltv)
 
     case = EscalationCase(
         customer_id=state["customer_id"],
         reason=reason,
-        summary=(
-            f"Churn risk reason: {state.get('risk_reason', '')}. Profile: {profile}"
-        ),
+        summary=(f"Churn risk reason: {state.get('risk_reason', '')}. Profile: {profile}"),
         recommended_action="Sales representative should call and present a personalized offer",
         priority=priority,
     )
@@ -223,7 +222,7 @@ def run_workflow(customer_id: str, profile: dict | None = None) -> AgentState:
     try:
         graph = build_graph()
         initial: AgentState = {"customer_id": customer_id, "profile": profile or {}}
-        return dict(graph.invoke(initial))
+        return cast(AgentState, dict(graph.invoke(initial)))
     except ImportError:
         return _run_sequential(customer_id, profile or {})
 
@@ -234,7 +233,7 @@ def _serialize_state(state: AgentState) -> dict:
         if key == "retrieval" and isinstance(value, RetrievalResult):
             out[key] = {"chunks": value.chunks, "sources": value.sources, "scores": value.scores}
         elif key == "final_email":
-            out[key] = mask_pii(value or "")
+            out[key] = mask_pii(value if isinstance(value, str) else "")
         else:
             out[key] = _native(value)
     return out
@@ -243,7 +242,9 @@ def _serialize_state(state: AgentState) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Agentic AI re-engagement flow")
     parser.add_argument("customer_id", nargs="?", default="CUST1000")
-    parser.add_argument("--out", type=Path, default=settings.artifacts_dir / "agent_run_report.json")
+    parser.add_argument(
+        "--out", type=Path, default=settings.artifacts_dir / "agent_run_report.json"
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")

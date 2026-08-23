@@ -42,7 +42,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: astral-sh/setup-uv@v10.0.1
       - name: Install
-        run: uv pip install --system -e ".[ml,experiment,dev]"
+        run: uv pip install --system -e ".[ml,experiment,serving,agents,dev]"
       - name: Pytest
         run: pytest --cov=src --cov-report=xml
       - name: Upload coverage
@@ -58,7 +58,7 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-node@v4.5.1
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm

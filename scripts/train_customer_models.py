@@ -152,7 +152,9 @@ def fit_gamma_gamma(x: np.ndarray, m: np.ndarray) -> np.ndarray:
 # ============================== Segmentation ==============================
 
 
-def fit_segmentation(df: pd.DataFrame, now: pd.Timestamp) -> tuple[np.ndarray, KMeans, StandardScaler]:
+def fit_segmentation(
+    df: pd.DataFrame, now: pd.Timestamp
+) -> tuple[np.ndarray, KMeans, StandardScaler]:
     """RFM + K-Means segmentation; non-purchasers are 'Dormant'."""
     segments = np.full(len(df), DORMANT_SEGMENT, dtype=object)
     purchasers = df["total_orders"] > 0
@@ -280,8 +282,10 @@ def main() -> None:
 
     freq = (df.loc[purchasers, "total_orders"] - 1).clip(lower=0).astype(int).to_numpy(dtype=float)
     recency = (
-        df.loc[purchasers, "last_order_date"] - df.loc[purchasers, "first_order_date"]
-    ).dt.days.astype(float).to_numpy()
+        (df.loc[purchasers, "last_order_date"] - df.loc[purchasers, "first_order_date"])
+        .dt.days.astype(float)
+        .to_numpy()
+    )
     tenure = (now - df.loc[purchasers, "first_order_date"]).dt.days.astype(float).to_numpy()
     monetary = df.loc[purchasers, "avg_order_value"].astype(float).to_numpy()
 
@@ -306,9 +310,7 @@ def main() -> None:
     expected_orders[p_valid_idx] = bg_nbd_expected_transactions(
         bg_params, horizon, freq_v, recency_v, tenure_v
     )
-    expected_monetary[p_valid_idx] = gamma_gamma_expected_monetary(
-        gg_params, freq_v, monetary_v
-    )
+    expected_monetary[p_valid_idx] = gamma_gamma_expected_monetary(gg_params, freq_v, monetary_v)
     expected_clv = expected_orders * expected_monetary
 
     clv_vals = expected_clv[expected_clv > 0]
@@ -369,12 +371,19 @@ def main() -> None:
     recency_days = (now - df["last_order_date"]).dt.days.astype(float)
     recency_days = recency_days.fillna(recency_days.max())
     r_score = 4 - pd.qcut(recency_days, 4, labels=False, duplicates="drop")
-    f_score = pd.qcut(df["total_orders"].rank(method="first"), 4, labels=False, duplicates="drop") + 1
-    m_score = pd.qcut(df["total_spend_usd"].rank(method="first"), 4, labels=False, duplicates="drop") + 1
+    f_score = (
+        pd.qcut(df["total_orders"].rank(method="first"), 4, labels=False, duplicates="drop") + 1
+    )
+    m_score = (
+        pd.qcut(df["total_spend_usd"].rank(method="first"), 4, labels=False, duplicates="drop") + 1
+    )
 
     # ---------- Persist ----------
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    dump({"kmeans": kmeans, "scaler": scaler, "labels": PURCHASER_SEGMENTS}, OUT_DIR / "segmentation.joblib")
+    dump(
+        {"kmeans": kmeans, "scaler": scaler, "labels": PURCHASER_SEGMENTS},
+        OUT_DIR / "segmentation.joblib",
+    )
     dump(cart_pipe, OUT_DIR / "cart_abandon_pipeline.joblib")
 
     out = pd.DataFrame(
@@ -397,8 +406,12 @@ def main() -> None:
 
     metrics = {
         "segmentation": pd.Series(segments).value_counts().to_dict(),
-        "bg_nbd_params": {k: round(float(v), 4) for k, v in zip(["r", "alpha", "a", "b"], bg_params, strict=False)},
-        "gamma_gamma_params": {k: round(float(v), 4) for k, v in zip(["p", "q", "v"], gg_params, strict=False)},
+        "bg_nbd_params": {
+            k: round(float(v), 4) for k, v in zip(["r", "alpha", "a", "b"], bg_params, strict=False)
+        },
+        "gamma_gamma_params": {
+            k: round(float(v), 4) for k, v in zip(["p", "q", "v"], gg_params, strict=False)
+        },
         "cart_abandon": {"train_roc_auc": cart_train_auc, "test": cart_test_metrics},
         "guardrails": guardrails,
         "customers": int(len(df)),
