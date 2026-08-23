@@ -3,7 +3,7 @@
 An enterprise-grade **Churn Prediction → Experimentation Platform → Agentic
 AI/RAG** end-to-end re-engagement platform.
 
-<!-- Replace OWNER/REPO with your GitHub repository path after pushing. -->[![CI](https://github.com)](https://github.com)
+[![CI](https://github.com)](https://github.com/koraysrn/Retention_Intelligence)
 [![Python 3.14](https://img.shields.io/badge/python-3.14-3776AB?logo=python&logoColor=white)](.python-version)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](.pre-commit-config.yaml)
