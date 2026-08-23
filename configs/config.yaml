@@ -1,0 +1,46 @@
+# General pipeline configuration
+paths:
+  raw_data: "ecommerce_data.csv"
+  processed: "data/processed"
+  artifacts: "artifacts"
+
+churn:
+  horizon_days: 90
+  high_risk_threshold: 0.70
+  medium_risk_threshold: 0.40
+
+experiment:
+  treatment_ratio: 0.5
+  alpha: 0.05
+  power: 0.80
+  mde_relative: 0.20
+  buffer: 0.20
+  baseline_churn_rate: null   # Computed from the data in Phase 0
+  ltv: 500                    # Lifetime value per lost customer
+  incentive_cost: 50          # Discount cost per customer for the campaign
+
+serving:
+  host: "0.0.0.0"
+  port: 8000
+
+monitoring:
+  psi_threshold: 0.2
+  concept_drift_min_drop: 0.10
+
+agents:
+  max_discount_pct: 30
+  top_k_retrieval: 5
+  high_ltv_threshold: 1000
+  confidence_threshold: 0.8
+
+streaming:
+  kafka_brokers: null          # null -> in-memory event bus (prototype)
+  trigger_events: ["cart_abandoned"]
+
+channels:
+  enabled: ["email", "sms", "push"]
+  default_channels: ["email", "push"]
+
+cdp:
+  provider: "segment"          # segment | mparticle
+  api_key: ""                  # from environment variable (CDP_API_KEY)

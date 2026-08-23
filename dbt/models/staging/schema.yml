@@ -1,0 +1,43 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: main
+    description: "Raw ecommerce_data.csv customer data (after CSV ingestion)"
+    tables:
+      - name: customers
+        description: >
+          Customer-level e-commerce data:
+          customer_id, name, email, country, age, age_group, signup_date,
+          marketing_opt_in, total_orders, total_spend_usd, ... , is_repeat_customer
+        columns:
+          - name: customer_id
+            description: "Customer key"
+          - name: country
+            description: "Country"
+          - name: signup_date
+            description: "Registration date"
+          - name: is_repeat_customer
+            description: "Repeat purchase label (1/0)"
+
+models:
+  - name: stg_customers
+    description: >
+      Cleaned ecommerce_data.csv customer data. Date columns are cast to
+      TIMESTAMP; rows with an empty customer_id are dropped.
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+      - name: country
+        tests:
+          - not_null
+      - name: total_orders
+        tests:
+          - not_null
+      - name: total_spend_usd
+        tests:
+          - not_null
+      - name: total_sessions
+        tests:
+          - not_null

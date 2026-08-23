@@ -1,0 +1,31 @@
+name: "churn_reengagement"
+version: "1.0.0"
+config-version: 2
+
+# The profile definition lives in dbt/profiles.yml (gitignored).
+# Example: dbt/profiles.example.yml
+profile: "churn_reengagement"
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# DuckDB is used in the prototype; switch to Snowflake/BigQuery in enterprise.
+models:
+  churn_reengagement:
+    staging:
+      +materialized: view
+      +schema: staging
+    mart:
+      +materialized: table
+      +schema: mart
+
+vars:
+  churn_horizon_days: 90
+  high_risk_threshold: 0.70

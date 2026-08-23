@@ -1,0 +1,42 @@
+# =============================================================================
+# Churn Re-Engagement Platform — Git attribute rules
+# Enforce consistent line endings and mark binary/generated files.
+# =============================================================================
+
+# Default: normalize line endings to LF in the repository.
+* text=auto eol=lf
+
+# Source code
+*.py text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+Makefile text eol=lf
+
+# Windows-only scripts keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary formats (never diff as text).
+*.parquet binary
+*.duckdb binary
+*.db binary
+*.joblib binary
+*.pkl binary
+*.onnx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.zip binary
+*.gz binary

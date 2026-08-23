@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: customer_features
+    description: "Customer-level behavioural features (ecommerce_data.csv)"
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: total_spend_usd
+        tests:
+          - not_null
+      - name: tenure_days
+        tests:
+          - not_null
+
+  - name: churn_labels
+    description: "Churn labels: churn (no repeat purchase)"
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: churn
+        tests:
+          - not_null

@@ -1,0 +1,19 @@
+# Copy this file to `profiles.yml`. profiles.yml is gitignored.
+churn_reengagement:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: data/processed/warehouse.duckdb
+      threads: 4
+    # Enterprise target profile (example — Snowflake):
+    # prod:
+    #   type: snowflake
+    #   account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+    #   user: "{{ env_var('SNOWFLAKE_USER') }}"
+    #   password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+    #   role: ANALYTICS
+    #   database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+    #   warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
+    #   schema: DBT
+    #   threads: 8

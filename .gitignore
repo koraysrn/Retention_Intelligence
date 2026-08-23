@@ -1,0 +1,137 @@
+# =============================================================================
+# Churn Re-Engagement Platform — Git ignore rules
+# =============================================================================
+
+# ----------------------------- Python -----------------------------
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg
+*.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.uv/
+
+# Testing & coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.pytest/
+.hypothesis/
+.tox/
+.nox/
+
+# Type checkers
+.pyre/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+.ipython/
+
+# Profiling
+*.prof
+*.lprof
+
+# --------------------------- Environment & secrets ---------------------------
+.env
+.env.*
+!.env.example
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.p8
+service-account*.json
+.aws/
+.gcloud/
+
+# --------------------------- ML / experiment artifacts -----------------------
+# IMPORTANT: do not use a bare `models/` rule here — it would accidentally
+# ignore the `src/models` and `dbt/models` source packages.
+mlruns/
+mlflow.db
+artifacts/
+runs/
+wandb/
+lightning_logs/
+*.joblib
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.onnx
+*.h5
+*.keras
+*.tflite
+*.pb
+*.gguf
+*.safetensors
+
+# -------------------------------- Data --------------------------------------
+# Raw/processed data never enters the repository. The directory structure is
+# preserved with .gitkeep placeholders.
+/data/raw/*
+!/data/raw/.gitkeep
+/data/processed/*
+!/data/processed/.gitkeep
+/data/interim/*
+/data/external/*
+*.csv
+*.parquet
+*.feather
+*.db
+*.duckdb
+*.sqlite
+*.sqlite3
+
+# ------------------------------- dbt ----------------------------------------
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+dbt/profiles.yml
+
+# ------------------------------ Node / Frontend -----------------------------
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+*.tsbuildinfo
+.npm/
+.yarn/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+
+# -------------------------------- IDE / OS ----------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/

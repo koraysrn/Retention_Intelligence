@@ -1,0 +1,3 @@
+# Çekirdek + tüm kurumsal ekstralar (prototip/CI için)
+# Üretimde yalnızca gerekli extras kurulur: pip install -e ".[ml,experiment,serving]"
+-e .[ml,experiment,serving,mlops,monitoring,agents,dbt,dev]

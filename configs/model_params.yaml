@@ -1,0 +1,38 @@
+# Model hyperparameters (ecommerce_data.csv churn model)
+# Goal: balanced, regularized tree ensembles that maximize ROC-AUC and F1.
+lightgbm:
+  objective: binary
+  metric: auc
+  learning_rate: 0.04
+  num_leaves: 31
+  max_depth: -1
+  n_estimators: 600
+  min_child_samples: 20
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+  random_state: 42
+  verbose: -1
+xgboost:
+  objective: binary:logistic
+  eval_metric: auc
+  learning_rate: 0.04
+  max_depth: 5
+  n_estimators: 600
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0.1
+  reg_lambda: 1.0
+  min_child_weight: 1
+  random_state: 42
+catboost:
+  loss_function: Logloss
+  eval_metric: AUC
+  learning_rate: 0.04
+  depth: 6
+  iterations: 600
+  l2_leaf_reg: 3.0
+  random_seed: 42
+  verbose: 0
+  allow_writing_files: false
