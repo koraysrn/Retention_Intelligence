@@ -8,12 +8,12 @@ problem, so `accuracy` alone is **not used**.
 
 | Metric | What it measures | Role in this project | Priority |
 |---|---|---|---|
-| **PR-AUC** | Area under the precision-recall curve | The most informative ranking metric for imbalanced data | ⭐ Highest |
+| **PR-AUC** | Area under the precision-recall curve | The most informative ranking metric for imbalanced data | Highest |
 | **Recall** | How many real churns were captured | Missing churn = revenue loss | High |
 | **Precision** | How many flagged "churns" are correct | False positives = wasted discount cost | High |
 | **ROC-AUC** | Threshold-independent ranking quality | General comparison | Medium |
 | **F1-Score** | Harmonic balance of precision and recall | Single-number summary | Medium |
-| **Profit curve** | Expected profit per threshold | Threshold optimization | ⭐ Business decision |
+| **Profit curve** | Expected profit per threshold | Threshold optimization | Business decision |
 | **Lift (top decile)** | Gain within the top 10% | Campaign targeting effectiveness | Supporting |
 
 ## 2. Why These Metrics?
